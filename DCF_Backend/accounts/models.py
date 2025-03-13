@@ -109,6 +109,8 @@ class Charity(models.Model):
     description = models.TextField()
     category = models.CharField(max_length=50, choices=CATEGORY_CHOICES)
     location = models.CharField ( max_length=300 )
+    latitude = models.FloatField(null=True, blank=True)
+    longitude = models.FloatField(null=True, blank=True)
 
 
 
@@ -160,6 +162,8 @@ class Event(models.Model):
     date = models.DateField()
     location = models.CharField ( max_length=300 )
     stock_allocation = models.OneToOneField(Stock, on_delete=models.SET_NULL, null=True, blank=True)
+    latitude = models.FloatField(null=True, blank=True)
+    longitude = models.FloatField(null=True, blank=True)
 
     
 

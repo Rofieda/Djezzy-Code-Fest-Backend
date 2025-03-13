@@ -164,7 +164,7 @@ class CharityRegistrationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Charity
         # Fields for charity registration including charity-specific fields and user fields
-        fields = ('name', 'description', 'category', 'location', 'email', 'password')
+        fields = ('name', 'description', 'category', 'location', 'email', 'password' , 'latitude' , 'longitude')
     
     def validate_email(self, value):
         # Check if a user with this email already exists
