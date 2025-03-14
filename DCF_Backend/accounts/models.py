@@ -142,9 +142,23 @@ class PostImage(models.Model):
 
 
 class Product(models.Model):
+    CATEGORY_CHOICES = [
+        ('aliments_de_base', 'Aliments de base'),
+        ('produits_laitiers', 'Produits laitiers'),
+        ('boissons', 'Boissons'),
+        ('viandes_proteines', 'Viandes & Protéines'),
+        ('cereales_legumineuses', 'Céréales & Légumineuses'),
+        ('fruits_legumes', 'Fruits & Légumes'),
+        ('epices_condiments', 'Épices & Condiments'),
+        ('hygiene_nettoyage', 'Hygiène & Nettoyage'),
+        ('huiles_cuisson', 'Huiles & Matières grasses'),
+        ('pain_patisseries', 'Pain & Pâtisseries'),
+        ('desserts_sucreries', 'Desserts & Sucreries'),
+        ('autre', 'Autre'),
+    ]
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True, null=True)
-    category = models.CharField(max_length=255, blank=True, null=True)
+    category = models.CharField(max_length=255,choices=CATEGORY_CHOICES, blank=True, null=True)
 
 
 

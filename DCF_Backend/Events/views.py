@@ -7,9 +7,9 @@ from django.http import Http404
 
 # Create your views here.
 from rest_framework import viewsets
-from .serializers import EventSerializer , CharitySerializer
-from accounts.models import Charity
-import math
+from .serializers import EventSerializer , CharitySerializer , ProductSerializer , StockSerializer
+from accounts.models import Charity , Product , Stock
+import math 
 
 
 class EventListCreateAPIView(APIView):
@@ -114,3 +114,134 @@ class CharitySearchAPIView(APIView):
         # Serialize the filtered charities
         serializer = EventSerializer(events, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+    
+
+
+
+
+
+class ProductAPIView(APIView):
+    def get(self, request):
+        """List all existing products"""
+        products = Product.objects.all()
+        serializer = ProductSerializer(products, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def post(self, request):
+        """Add a new product"""
+        serializer = ProductSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+
+
+
+class StockAPIView(APIView):
+    def post(self, request):
+        """
+        Crée un nouvel enregistrement de stock ou met à jour la quantité existante.
+        """
+        charity_id = request.data.get('charity')
+        product_id = request.data.get('product')
+        quantity = request.data.get('quantity', 0)
+
+        if not charity_id or not product_id:
+            return Response({"error": "charity et product sont obligatoires."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            charity = Charity.objects.get(id=charity_id)
+            product = Product.objects.get(id=product_id)
+        except Charity.DoesNotExist:
+            return Response({"error": "Charity introuvable."}, status=status.HTTP_404_NOT_FOUND)
+        except Product.DoesNotExist:
+            return Response({"error": "Produit introuvable."}, status=status.HTTP_404_NOT_FOUND)
+
+        # Vérifier si le stock existe déjà pour ce produit et cette association
+        stock, created = Stock.objects.get_or_create(charity=charity, product=product)
+
+        if created:
+            stock.quantity = quantity
+        else:
+            stock.quantity += int(quantity)  # Ajoute à la quantité existante
+
+        stock.save()
+        serializer = StockSerializer(stock)
+        return Response(serializer.data, status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
+
+    def patch(self, request):
+        """
+        Met à jour la quantité d'un stock existant en fonction de l'ID de l'association et du produit.
+        """
+        charity_id = request.data.get("charity_id")
+        product_id = request.data.get("product_id")
+       # quantity = request.data.get("quantity")
+
+        if not charity_id :
+            return Response({"error": "L'ID de l'association (charity_id) est requis."}, status=status.HTTP_400_BAD_REQUEST)
+        if not product_id :
+            return Response({"error": "L'ID de le produit (product_id) est requis."}, status=status.HTTP_400_BAD_REQUEST)
+        if not Stock.objects.filter(charity_id=charity_id).exists():
+            return Response({"error": f"Aucune association trouvée avec l'ID {charity_id}."}, status=status.HTTP_404_NOT_FOUND)
+        
+        try:
+            stock = Stock.objects.get(charity_id=charity_id, product_id=product_id)
+        except Stock.DoesNotExist:
+            return Response(
+                {"error": f"Aucun produit trouvé avec l'ID {product_id} pour l'association {charity_id}."}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        
+        
+           
+        quantity = request.data.get("quantity")
+        if quantity is None:
+            return Response({"error": "La quantité est requise."}, status=status.HTTP_400_BAD_REQUEST)
+
+        stock.quantity = int(quantity)
+        stock.save()
+        serializer = StockSerializer(stock)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    
+    def get(self, request, charity_id):
+        """
+        Récupérer le stock liée à une charit.
+        """
+        stocks = Stock.objects.filter(charity_id=charity_id)
+        serializer = StockSerializer(stocks, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+"""
+    def post(self, request):
+       
+        Ajoute un nouveau produit dans le stock d'une association.
+      
+        charity_id = request.data.get("charity_id")
+        product_id = request.data.get("product_id")
+        quantity = request.data.get("quantity", 0)  # Par défaut, la quantité est 0
+
+        if not charity_id:
+            return Response({"error": "L'ID de l'association (charity_id) est requis."}, status=status.HTTP_400_BAD_REQUEST)
+        if not product_id:
+            return Response({"error": "L'ID du produit (product_id) est requis."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Vérifier si le produit existe déjà pour cette association
+        if Stock.objects.filter(charity_id=charity_id, product_id=product_id).exists():
+            return Response(
+                {"error": "Ce produit est déjà dans le stock de cette association."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Créer un nouvel enregistrement dans le stock
+        stock = Stock.objects.create(
+            charity_id=charity_id,
+            product_id=product_id,
+            quantity=int(quantity)  # Conversion en entier pour éviter les erreurs
+        )
+
+        serializer = StockSerializer(stock)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+         """
