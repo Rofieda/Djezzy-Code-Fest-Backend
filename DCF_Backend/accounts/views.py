@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from .serializers import   LoginSerializer , UserRegistrationSerializer , LogoutUserSerializer , VolunteerRegistrationSerializer , CharityRegistrationSerializer
-
+from .models import Volunteer , Charity
 from datetime import timedelta
 from django.http import JsonResponse
 from rest_framework.parsers import JSONParser
@@ -68,20 +68,20 @@ class LoginView(TokenObtainPairView):
 
             # Get user role
             role = user.role  # Assuming there is a `role` field in User model
-            student_id = None
-            enterprise_id = None
+            volunteer_id = None
+            charity_id = None
 
             # Check if the user is a student
-            if role == 'student':
-                student = StudentProfile.objects.filter(user=user).first()
-                if student:
-                    student_id = student.id
+            if role == 'volunteer':
+                volunteer = Volunteer.objects.filter(user=user).first()
+                if volunteer:
+                    volunteer_id = volunteer.id
 
             # Check if the user is an enterprise
-            elif role == 'enterprise':
-                enterprise = EnterpriseProfile.objects.filter(user=user).first()
-                if enterprise:
-                    enterprise_id = enterprise.id
+            elif role == 'charity':
+                charity = Charity.objects.filter(user=user).first()
+                if charity:
+                    charity_id = charity.id
 
             # Prepare the response data with user details
             response_data = {
@@ -89,10 +89,9 @@ class LoginView(TokenObtainPairView):
                 'refresh': refresh_token,
                 'userID': user.id,
                 'role': role,
-                'student_id': student_id,
-                'enterprise_id': enterprise_id,
-                'first_name': user.first_name,
-                'last_name': user.last_name,
+                'volenteer_id': volunteer_id,
+                'charity_id': charity_id,
+                
                 'email': user.email,
             }
 
