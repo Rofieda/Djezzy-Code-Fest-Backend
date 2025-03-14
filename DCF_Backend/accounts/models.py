@@ -108,7 +108,6 @@ class Charity(models.Model):
     name = models.CharField(max_length=255)
     description = models.TextField()
     category = models.CharField(max_length=50, choices=CATEGORY_CHOICES)
-    location = models.CharField ( max_length=300 )
     latitude = models.FloatField(null=True, blank=True)
     longitude = models.FloatField(null=True, blank=True)
 
@@ -174,8 +173,6 @@ class Event(models.Model):
     name = models.CharField(max_length=255)
     description = models.TextField()
     date = models.DateField()
-    location = models.CharField ( max_length=300 )
-    stock_allocation = models.OneToOneField(Stock, on_delete=models.SET_NULL, null=True, blank=True)
     latitude = models.FloatField(null=True, blank=True)
     longitude = models.FloatField(null=True, blank=True)
 
@@ -243,3 +240,17 @@ class Forum(models.Model):
 
     def __str__(self):
         return f"Forum for {self.event.name} created at {self.created_at}"
+    
+
+
+
+
+
+
+class EventStockAllocation(models.Model):
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='allocations')
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    allocated_quantity = models.PositiveIntegerField(default=0)
+
+    def __str__(self):
+        return f"{self.allocated_quantity} of {self.product.name} for {self.event.name}"

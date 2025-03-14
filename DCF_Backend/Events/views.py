@@ -7,8 +7,8 @@ from django.http import Http404
 
 # Create your views here.
 from rest_framework import viewsets
-from .serializers import EventSerializer , CharitySerializer , ProductSerializer , StockSerializer
-from accounts.models import Charity , Product , Stock
+from .serializers import EventSerializer , CharitySerializer , ProductSerializer , StockSerializer , EventStockAllocationSerializer
+from accounts.models import Charity , Product , Stock , EventStockAllocation
 import math 
 
 
@@ -143,8 +143,8 @@ class StockAPIView(APIView):
         """
         Crée un nouvel enregistrement de stock ou met à jour la quantité existante.
         """
-        charity_id = request.data.get('charity')
-        product_id = request.data.get('product')
+        charity_id = request.data.get('charity_id')
+        product_id = request.data.get('product_id')
         quantity = request.data.get('quantity', 0)
 
         if not charity_id or not product_id:
@@ -245,3 +245,57 @@ class StockAPIView(APIView):
         serializer = StockSerializer(stock)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
          """
+
+
+
+
+
+
+
+class AllocateStockToEventAPIView(APIView):
+    """
+    Endpoint to allocate a certain quantity of a product from the charity's stock
+    to an event. It checks if the charity has sufficient stock, deducts the quantity,
+    and creates/updates an allocation record.
+    """
+    def post(self, request):
+        serializer = EventStockAllocationSerializer(data=request.data)
+        if serializer.is_valid():
+            event = serializer.validated_data['event']
+            product = serializer.validated_data['product']
+            quantity_to_allocate = serializer.validated_data['allocated_quantity']
+
+            # Retrieve the charity's stock for the given product.
+            try:
+                stock_item = Stock.objects.get(charity=event.charity, product=product)
+            except Stock.DoesNotExist:
+                return Response(
+                    {"error": "No stock record found for this product in the charity's inventory."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Check if sufficient stock is available.
+            if stock_item.quantity < quantity_to_allocate:
+                return Response(
+                    {"error": "Insufficient stock available for this product."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Deduct the allocated quantity from the charity's stock.
+            stock_item.quantity -= quantity_to_allocate
+            stock_item.save()
+
+            # Create or update the EventStockAllocation record.
+            allocation, created = EventStockAllocation.objects.get_or_create(
+                event=event,
+                product=product,
+                defaults={'allocated_quantity': quantity_to_allocate}
+            )
+            if not created:
+                allocation.allocated_quantity += quantity_to_allocate
+                allocation.save()
+
+            response_serializer = EventStockAllocationSerializer(allocation)
+            return Response(response_serializer.data, status=status.HTTP_201_CREATED)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

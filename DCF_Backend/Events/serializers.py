@@ -1,6 +1,6 @@
 
 from rest_framework import serializers
-from accounts.models import Event , Charity , Product , Stock
+from accounts.models import Event , Charity , Product , Stock , EventStockAllocation
 import math
 
 
@@ -29,3 +29,11 @@ class StockSerializer(serializers.ModelSerializer):
     class Meta:
         model = Stock
         fields = ['id', 'charity', 'product', 'quantity'] 
+
+
+
+
+class EventStockAllocationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EventStockAllocation
+        fields = ('id', 'event', 'product', 'allocated_quantity')
