@@ -363,25 +363,26 @@ class AssignUserToTaskView(APIView):
 class CheckStockThresholdAPIView(APIView):
     permission_classes = [AllowAny]
 
-    def get(self, request, *args, **kwargs):
-        charity_id  = request.data.get("charity_id")
-    
-        # Retrieve all stock items for the given charity_id
+    def get(self, request, charity_id, *args, **kwargs):
         stocks = Stock.objects.filter(charity_id=charity_id)
         alerts = []
 
-        # Check each stock record against its threshold
         for stock in stocks:
-            if stock.quantity < stock.seil:
+            if stock.quantity < stock.product.seil:
                 alerts.append({
-                    'product': stock.product.name,
+                    'product_id': stock.product.id,
+                    'product_name': stock.product.name,
                     'current_quantity': stock.quantity,
-                    'threshold': stock.seil,
-                    'alert': f"Low stock for {stock.product.name}: {stock.quantity} available (threshold: {stock.seil})."
+                    'threshold': stock.product.seil,
+                    'alert': f"Low stock for {stock.product.name}: {stock.quantity} available (threshold: {stock.product.seil}).",
+                    'status': 0 
                 })
 
-        # Return alerts if any, otherwise a message indicating all is well
+
         if alerts:
-            return Response({'alerts': alerts})
+            # Use a 409 Conflict status (or another appropriate code) to indicate an issue
+            return Response({'alerts': alerts}, status=status.HTTP_409_CONFLICT)
         else:
-            return Response({'message': 'Everything is good!'})
+            # Everything is fine
+            return Response({'message': 'All products are stocked in good quantities.'}, status=status.HTTP_200_OK)
+        

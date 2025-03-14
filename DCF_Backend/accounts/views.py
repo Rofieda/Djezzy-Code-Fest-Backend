@@ -5,7 +5,7 @@ from rest_framework import status
 from rest_framework.permissions import AllowAny
 
 
-from .serializers import   LoginSerializer , UserRegistrationSerializer , LogoutUserSerializer , VolunteerRegistrationSerializer , CharityRegistrationSerializer
+from .serializers import   LoginSerializer , UserRegistrationSerializer , LogoutUserSerializer , VolunteerRegistrationSerializer , CharityRegistrationSerializer , UserSerializer
 from .models import Volunteer , Charity
 from datetime import timedelta
 from django.http import JsonResponse
@@ -85,11 +85,13 @@ class LoginView(TokenObtainPairView):
                 if charity:
                     charity_id = charity.id
 
+            user_serializer = UserSerializer(user)
+
             # Prepare the response data with user details
             response_data = {
                #'access': access_token,
                 'refresh': refresh_token,
-                'userID': user.id,
+                'user': user_serializer.data ,
                 'role': role,
                 'volenteer_id': volunteer_id,
                 'charity_id': charity_id,
@@ -185,15 +187,19 @@ def get_tokens_for_user(user):
     }
 
 class RegisterVolunteerView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def post(self, request):
         serializer = VolunteerRegistrationSerializer(data=request.data)
         if serializer.is_valid():
             volunteer = serializer.save()
             tokens = get_tokens_for_user(volunteer.user)
+
+            user_serializer = UserSerializer(volunteer.user)
+            
             response_data = serializer.data
             response_data.update(tokens)
+            response_data['user'] = user_serializer.data
             response = Response(response_data, status=status.HTTP_201_CREATED)
             response.set_cookie(
                 key="accessToken",
@@ -219,17 +225,21 @@ class RegisterVolunteerView(APIView):
     
 
 class RegisterCharityView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def post(self, request):
         serializer = CharityRegistrationSerializer(data=request.data)
         if serializer.is_valid():
             charity = serializer.save()
             tokens = get_tokens_for_user(charity.user)
+
+            user_serializer = UserSerializer(charity.user)
             response_data = serializer.data
             response_data.update(tokens)
+            response_data['user'] = user_serializer.data
             response = Response(response_data, status=status.HTTP_201_CREATED)
 
+            
             response.set_cookie(
                 key="accessToken",
                 value=tokens.get("accessToken"),
