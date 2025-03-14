@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from accounts.models import Event
 from django.http import Http404
-
+from rest_framework import generics
 # Create your views here.
 from rest_framework import viewsets
 from .serializers import EventSerializer , CharitySerializer , ProductSerializer , StockSerializer , EventStockAllocationSerializer
@@ -265,7 +265,6 @@ class AllocateStockToEventAPIView(APIView):
             product = serializer.validated_data['product']
             quantity_to_allocate = serializer.validated_data['allocated_quantity']
 
-            # Retrieve the charity's stock for the given product.
             try:
                 stock_item = Stock.objects.get(charity=event.charity, product=product)
             except Stock.DoesNotExist:
@@ -274,18 +273,15 @@ class AllocateStockToEventAPIView(APIView):
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
-            # Check if sufficient stock is available.
             if stock_item.quantity < quantity_to_allocate:
                 return Response(
                     {"error": "Insufficient stock available for this product."},
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
-            # Deduct the allocated quantity from the charity's stock.
             stock_item.quantity -= quantity_to_allocate
             stock_item.save()
 
-            # Create or update the EventStockAllocation record.
             allocation, created = EventStockAllocation.objects.get_or_create(
                 event=event,
                 product=product,
@@ -299,3 +295,13 @@ class AllocateStockToEventAPIView(APIView):
             return Response(response_serializer.data, status=status.HTTP_201_CREATED)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+
+
+class EventStockAllocationListAPIView(generics.ListAPIView):
+    serializer_class = EventStockAllocationSerializer
+
+    def get_queryset(self):
+        # Get the event id from URL keyword arguments
+        event_id = self.kwargs.get('event_id')
+        return EventStockAllocation.objects.filter(event__id=event_id)
