@@ -338,10 +338,14 @@ class AssignUserToTaskView(APIView):
             if not all([user_id, event_id, task_id]):
                 return Response({"error": "Missing required parameters"}, status=status.HTTP_400_BAD_REQUEST)
 
+            
             # Fetch user, event, and task from database
             user = User.objects.get(id=user_id)
             event = Event.objects.get(id=event_id)
             task = Task.objects.get(id=task_id)
+
+            if not user.role=="volunteer": 
+                return Response({"error": "User must be a volunteer to register for this task"}, status=status.HTTP_403_FORBIDDEN)
 
             # Ensure task belongs to the event
             if task.event_id != event.id:
@@ -350,7 +354,7 @@ class AssignUserToTaskView(APIView):
             # Get task date (default to event date if task has no specific date)
             task_date = getattr(task, 'date', event.date)
 
-            # Check if user already has a task on the same date in a different event
+         
             user_tasks_on_date = UserTask.objects.filter(
                 user=user, assigned_date=task_date
             ).exclude(task__event=event)
@@ -362,12 +366,14 @@ class AssignUserToTaskView(APIView):
             with transaction.atomic():
                 UserTask.objects.create(user=user, task=task, event=event, assigned_date=task_date)
 
-                # Update task volunteer limit if applicable
                 if task.volunteer_limit > 0:
                     task.volunteer_limit -= 1
                     if task.volunteer_limit == 0:
-                        task.is_active = False  # Deactivate task instead of deleting
-                    task.save()
+                        task.delete()  # Delete the task when volunteer limit reaches 0
+                        
+                    else:
+                        task.save()
+
 
             return Response({"message": "User successfully assigned to the task"}, status=status.HTTP_201_CREATED)
 

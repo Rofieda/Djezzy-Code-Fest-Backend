@@ -2,6 +2,8 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.permissions import AllowAny
+
 
 from .serializers import   LoginSerializer , UserRegistrationSerializer , LogoutUserSerializer , VolunteerRegistrationSerializer , CharityRegistrationSerializer
 from .models import Volunteer , Charity
@@ -112,6 +114,7 @@ class LoginView(TokenObtainPairView):
 ###########################################################################################################################################
 
 class LogoutAPIView(APIView):
+    permission_classes = [AllowAny]
     """
     API view to handle user logout by blacklisting the refresh token.
     Requires an authenticated user with a valid refresh token.
@@ -140,6 +143,7 @@ class LogoutAPIView(APIView):
 ###########################################################################################################################################
 
 class CreateUserView(APIView):
+    permission_classes = [AllowAny]
     """
     API view to create a user with email, password, and role.
     """
@@ -174,6 +178,7 @@ def get_tokens_for_user(user):
     }
 
 class RegisterVolunteerView(APIView):
+    permission_classes = [AllowAny]
     def post(self, request):
         serializer = VolunteerRegistrationSerializer(data=request.data)
         if serializer.is_valid():
@@ -186,6 +191,7 @@ class RegisterVolunteerView(APIView):
     
 
 class RegisterCharityView(APIView):
+    permission_classes = [AllowAny]
     def post(self, request):
         serializer = CharityRegistrationSerializer(data=request.data)
         if serializer.is_valid():
