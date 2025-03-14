@@ -254,3 +254,14 @@ class EventStockAllocation(models.Model):
 
     def __str__(self):
         return f"{self.allocated_quantity} of {self.product.name} for {self.event.name}"
+    
+
+
+class UserTask(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="user_tasks")
+    task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="assigned_users")
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="event_tasks")
+    assigned_date = models.DateField()
+
+    class Meta:
+        unique_together = ('user', 'task', 'event')  # Ensure no duplicate assignments

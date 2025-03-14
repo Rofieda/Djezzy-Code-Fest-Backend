@@ -2,12 +2,14 @@ from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from accounts.models import Event
+from accounts.models import Event , User , UserTask , Task
 from django.http import Http404
+from rest_framework.permissions import AllowAny
+
 from rest_framework import generics
 # Create your views here.
 from rest_framework import viewsets
-from .serializers import EventSerializer , CharitySerializer , ProductSerializer , StockSerializer , EventStockAllocationSerializer
+from .serializers import EventSerializer , CharitySerializer , ProductSerializer , StockSerializer , EventStockAllocationSerializer , TaskSerializer
 from accounts.models import Charity , Product , Stock , EventStockAllocation
 import math 
 
@@ -76,6 +78,7 @@ def haversine(lat1, lon1, lat2, lon2):
 
 
 class CharitySearchAPIView(APIView):
+    permission_classes = [AllowAny]
     def get(self, request):
         # Extract query parameters
         lat = request.query_params.get('lat')
@@ -299,9 +302,80 @@ class AllocateStockToEventAPIView(APIView):
 
 
 class EventStockAllocationListAPIView(generics.ListAPIView):
+    permission_classes = [AllowAny]
     serializer_class = EventStockAllocationSerializer
 
     def get_queryset(self):
         # Get the event id from URL keyword arguments
         event_id = self.kwargs.get('event_id')
         return EventStockAllocation.objects.filter(event__id=event_id)
+    
+
+class TaskCreateAPIView(APIView):
+    permission_classes = [AllowAny]
+    def post(self, request):
+        serializer = TaskSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+from django.db import transaction
+
+
+
+class AssignUserToTaskView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request, *args, **kwargs):
+        try:
+            # Retrieve parameters from request data
+            user_id = request.data.get("user_id")
+            event_id = request.data.get("event_id")
+            task_id = request.data.get("task_id")
+
+            # Check for missing parameters
+            if not all([user_id, event_id, task_id]):
+                return Response({"error": "Missing required parameters"}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Fetch user, event, and task from database
+            user = User.objects.get(id=user_id)
+            event = Event.objects.get(id=event_id)
+            task = Task.objects.get(id=task_id)
+
+            # Ensure task belongs to the event
+            if task.event_id != event.id:
+                return Response({"error": "Task does not belong to this event"}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Get task date (default to event date if task has no specific date)
+            task_date = getattr(task, 'date', event.date)
+
+            # Check if user already has a task on the same date in a different event
+            user_tasks_on_date = UserTask.objects.filter(
+                user=user, assigned_date=task_date
+            ).exclude(task__event=event)
+
+            if user_tasks_on_date.exists():
+                return Response({"error": "User already has a task in another event on this date"}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Assign user to task with database transaction
+            with transaction.atomic():
+                UserTask.objects.create(user=user, task=task, event=event, assigned_date=task_date)
+
+                # Update task volunteer limit if applicable
+                if task.volunteer_limit > 0:
+                    task.volunteer_limit -= 1
+                    if task.volunteer_limit == 0:
+                        task.is_active = False  # Deactivate task instead of deleting
+                    task.save()
+
+            return Response({"message": "User successfully assigned to the task"}, status=status.HTTP_201_CREATED)
+
+        except User.DoesNotExist:
+            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+        except Event.DoesNotExist:
+            return Response({"error": "Event not found"}, status=status.HTTP_404_NOT_FOUND)
+        except Task.DoesNotExist:
+            return Response({"error": "Task not found"}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

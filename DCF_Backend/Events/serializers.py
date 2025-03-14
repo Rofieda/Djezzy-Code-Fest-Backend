@@ -1,6 +1,6 @@
 
 from rest_framework import serializers
-from accounts.models import Event , Charity , Product , Stock , EventStockAllocation
+from accounts.models import Event , Charity , Product , Stock , EventStockAllocation , Task
 import math
 
 
@@ -37,3 +37,9 @@ class EventStockAllocationSerializer(serializers.ModelSerializer):
     class Meta:
         model = EventStockAllocation
         fields = ('id', 'event', 'product', 'allocated_quantity')
+
+
+class TaskSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Task
+        fields = '__all__'  # Includes all fields in the model
