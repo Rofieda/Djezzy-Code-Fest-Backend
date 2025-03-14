@@ -358,3 +358,30 @@ class AssignUserToTaskView(APIView):
             return Response({"error": "Task not found"}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class CheckStockThresholdAPIView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request, *args, **kwargs):
+        charity_id  = request.data.get("charity_id")
+    
+        # Retrieve all stock items for the given charity_id
+        stocks = Stock.objects.filter(charity_id=charity_id)
+        alerts = []
+
+        # Check each stock record against its threshold
+        for stock in stocks:
+            if stock.quantity < stock.seil:
+                alerts.append({
+                    'product': stock.product.name,
+                    'current_quantity': stock.quantity,
+                    'threshold': stock.seil,
+                    'alert': f"Low stock for {stock.product.name}: {stock.quantity} available (threshold: {stock.seil})."
+                })
+
+        # Return alerts if any, otherwise a message indicating all is well
+        if alerts:
+            return Response({'alerts': alerts})
+        else:
+            return Response({'message': 'Everything is good!'})

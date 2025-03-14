@@ -87,7 +87,7 @@ class LoginView(TokenObtainPairView):
 
             # Prepare the response data with user details
             response_data = {
-                'access': access_token,
+               #'access': access_token,
                 'refresh': refresh_token,
                 'userID': user.id,
                 'role': role,
@@ -100,6 +100,7 @@ class LoginView(TokenObtainPairView):
             # Set the refresh token as a cookie
             response = Response(response_data)
             response.set_cookie(
+                
                 'refreshToken',
                 refresh_token,
                 max_age=timedelta(days=7),  # Set cookie expiration
@@ -107,6 +108,16 @@ class LoginView(TokenObtainPairView):
                 secure=True,  # Only send the cookie over HTTPS
                 samesite='Strict',  # Strict mode to prevent CSRF issues
             )
+            response = Response(response_data)
+            response.set_cookie(
+                "accessToken",
+                access_token,
+                max_age=timedelta(minutes=15),
+                httponly=True,
+                secure=True,
+                samesite='Strict',
+)
+            
             return response
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -183,7 +194,27 @@ class RegisterVolunteerView(APIView):
             tokens = get_tokens_for_user(volunteer.user)
             response_data = serializer.data
             response_data.update(tokens)
-            return Response(response_data, status=status.HTTP_201_CREATED)
+            response = Response(response_data, status=status.HTTP_201_CREATED)
+            response.set_cookie(
+                key="accessToken",
+                value=tokens.get("accessToken"),
+                max_age=int(timedelta(minutes=15).total_seconds()),  # 15 minutes in seconds
+                httponly=True,
+                secure=True,
+                samesite='Strict'
+            )
+            
+            # Set the refresh token as a cookie
+            response.set_cookie(
+                key="refreshToken",
+                value=tokens.get("refreshToken"),
+                max_age=int(timedelta(days=7).total_seconds()),  # 7 days in seconds
+                httponly=True,
+                secure=True,
+                samesite='Strict'
+            )
+            return response
+
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 
@@ -197,5 +228,25 @@ class RegisterCharityView(APIView):
             tokens = get_tokens_for_user(charity.user)
             response_data = serializer.data
             response_data.update(tokens)
-            return Response(response_data, status=status.HTTP_201_CREATED)
+            response = Response(response_data, status=status.HTTP_201_CREATED)
+
+            response.set_cookie(
+                key="accessToken",
+                value=tokens.get("accessToken"),
+                max_age=int(timedelta(minutes=15).total_seconds()),  # 15 minutes in seconds
+                httponly=True,
+                secure=True,
+                samesite='Strict'
+            )
+            
+            # Set the refresh token as a cookie
+            response.set_cookie(
+                key="refreshToken",
+                value=tokens.get("refreshToken"),
+                max_age=int(timedelta(days=7).total_seconds()),  # 7 days in seconds
+                httponly=True,
+                secure=True,
+                samesite='Strict'
+            )
+            return response
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

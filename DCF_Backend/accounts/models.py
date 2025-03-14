@@ -158,7 +158,7 @@ class Product(models.Model):
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True, null=True)
     category = models.CharField(max_length=255,choices=CATEGORY_CHOICES, blank=True, null=True)
-
+    seil = models.IntegerField(default=33)
 
 
 class Stock(models.Model):
