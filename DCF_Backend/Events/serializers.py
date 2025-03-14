@@ -6,6 +6,7 @@ import math
 
 
 class EventSerializer(serializers.ModelSerializer):
+    charity_name = serializers.CharField(source='charity.name', read_only=True)
     class Meta:
         model = Event
         fields = '__all__'

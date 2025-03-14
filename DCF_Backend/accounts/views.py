@@ -114,12 +114,8 @@ class LoginView(TokenObtainPairView):
 ###########################################################################################################################################
 
 class LogoutAPIView(APIView):
-    permission_classes = [AllowAny]
-    """
-    API view to handle user logout by blacklisting the refresh token.
-    Requires an authenticated user with a valid refresh token.
-    The access token should be included in the Authorization header.
-    """
+
+   
     permission_classes = [IsAuthenticated]
     serializer_class = LogoutUserSerializer
 
@@ -141,12 +137,12 @@ class LogoutAPIView(APIView):
         return Response({"detail": "Successfully logged out."}, status=status.HTTP_204_NO_CONTENT)
 
 ###########################################################################################################################################
-
+""""
 class CreateUserView(APIView):
     permission_classes = [AllowAny]
-    """
+   
     API view to create a user with email, password, and role.
-    """
+   
 
     def post(self, request, *args, **kwargs):
         serializer = UserSerializer(data=request.data)
@@ -165,7 +161,7 @@ class CreateUserView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 
-
+"""
 
 
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -178,7 +174,8 @@ def get_tokens_for_user(user):
     }
 
 class RegisterVolunteerView(APIView):
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
+
     def post(self, request):
         serializer = VolunteerRegistrationSerializer(data=request.data)
         if serializer.is_valid():
@@ -191,7 +188,8 @@ class RegisterVolunteerView(APIView):
     
 
 class RegisterCharityView(APIView):
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
+
     def post(self, request):
         serializer = CharityRegistrationSerializer(data=request.data)
         if serializer.is_valid():

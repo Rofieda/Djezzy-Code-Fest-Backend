@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from accounts.models import Event , User , UserTask , Task
 from django.http import Http404
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny ,IsAuthenticated
 
 from rest_framework import generics
 # Create your views here.
@@ -15,6 +15,8 @@ import math
 
 
 class EventListCreateAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
     def get(self, request):
         events = Event.objects.all()
         serializer = EventSerializer(events, many=True)
@@ -30,6 +32,8 @@ class EventListCreateAPIView(APIView):
 
 
 class EventDetailAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
     def get_object(self, pk):
         try:
             return Event.objects.get(pk=pk)
@@ -79,6 +83,7 @@ def haversine(lat1, lon1, lat2, lon2):
 
 class CharitySearchAPIView(APIView):
     permission_classes = [AllowAny]
+
     def get(self, request):
         # Extract query parameters
         lat = request.query_params.get('lat')
@@ -124,6 +129,8 @@ class CharitySearchAPIView(APIView):
 
 
 class ProductAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
     def get(self, request):
         """List all existing products"""
         products = Product.objects.all()
@@ -142,6 +149,8 @@ class ProductAPIView(APIView):
 
 
 class StockAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
     def post(self, request):
         """
         Crée un nouvel enregistrement de stock ou met à jour la quantité existante.
@@ -216,51 +225,15 @@ class StockAPIView(APIView):
         stocks = Stock.objects.filter(charity_id=charity_id)
         serializer = StockSerializer(stocks, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
-    
-"""
-    def post(self, request):
-       
-        Ajoute un nouveau produit dans le stock d'une association.
-      
-        charity_id = request.data.get("charity_id")
-        product_id = request.data.get("product_id")
-        quantity = request.data.get("quantity", 0)  # Par défaut, la quantité est 0
-
-        if not charity_id:
-            return Response({"error": "L'ID de l'association (charity_id) est requis."}, status=status.HTTP_400_BAD_REQUEST)
-        if not product_id:
-            return Response({"error": "L'ID du produit (product_id) est requis."}, status=status.HTTP_400_BAD_REQUEST)
-
-        # Vérifier si le produit existe déjà pour cette association
-        if Stock.objects.filter(charity_id=charity_id, product_id=product_id).exists():
-            return Response(
-                {"error": "Ce produit est déjà dans le stock de cette association."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        # Créer un nouvel enregistrement dans le stock
-        stock = Stock.objects.create(
-            charity_id=charity_id,
-            product_id=product_id,
-            quantity=int(quantity)  # Conversion en entier pour éviter les erreurs
-        )
-
-        serializer = StockSerializer(stock)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-         """
-
-
-
+  
 
 
 
 
 class AllocateStockToEventAPIView(APIView):
-    """
-    Endpoint to allocate a certain quantity of a product from the charity's stock
-    to an event. It checks if the charity has sufficient stock, deducts the quantity,
-    and creates/updates an allocation record.
-    """
+    permission_classes = [IsAuthenticated]
+
+  
     def post(self, request):
         serializer = EventStockAllocationSerializer(data=request.data)
         if serializer.is_valid():
@@ -302,7 +275,7 @@ class AllocateStockToEventAPIView(APIView):
 
 
 class EventStockAllocationListAPIView(generics.ListAPIView):
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
     serializer_class = EventStockAllocationSerializer
 
     def get_queryset(self):
@@ -312,7 +285,7 @@ class EventStockAllocationListAPIView(generics.ListAPIView):
     
 
 class TaskCreateAPIView(APIView):
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
     def post(self, request):
         serializer = TaskSerializer(data=request.data)
         if serializer.is_valid():
@@ -325,7 +298,7 @@ from django.db import transaction
 
 
 class AssignUserToTaskView(APIView):
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
         try:
