@@ -149,7 +149,7 @@ class ProductAPIView(APIView):
 
 
 class StockAPIView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def post(self, request):
         """
@@ -275,7 +275,7 @@ class AllocateStockToEventAPIView(APIView):
 
 
 class EventStockAllocationListAPIView(generics.ListAPIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
     serializer_class = EventStockAllocationSerializer
 
     def get_queryset(self):

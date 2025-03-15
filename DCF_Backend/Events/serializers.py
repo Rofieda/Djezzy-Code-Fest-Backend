@@ -20,6 +20,7 @@ class CharitySerializer(serializers.ModelSerializer):
 
 
 class ProductSerializer(serializers.ModelSerializer):
+    
     class Meta:
         model = Product
         fields = '__all__'  # Includes all fields: name, description, categor
@@ -27,6 +28,7 @@ class ProductSerializer(serializers.ModelSerializer):
 
 
 class StockSerializer(serializers.ModelSerializer):
+    product = ProductSerializer(read_only=True)
     class Meta:
         model = Stock
         fields = ['id', 'charity', 'product', 'quantity'] 
