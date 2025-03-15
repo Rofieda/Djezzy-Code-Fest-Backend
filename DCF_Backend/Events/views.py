@@ -366,12 +366,15 @@ class CheckStockThresholdAPIView(APIView):
     def get(self, request, charity_id, *args, **kwargs):
         stocks = Stock.objects.filter(charity_id=charity_id)
         alerts = []
+        products = [stock.product for stock in stocks]
+        
 
+        products_serializer = ProductSerializer(products, many=True)
         for stock in stocks:
             if stock.quantity < stock.product.seil:
+                product_data = ProductSerializer(stock.product).data
                 alerts.append({
-                    'product_id': stock.product.id,
-                    'product_name': stock.product.name,
+                    'product': product_data ,
                     'current_quantity': stock.quantity,
                     'threshold': stock.product.seil,
                     'alert': f"Low stock for {stock.product.name}: {stock.quantity} available (threshold: {stock.product.seil}).",
