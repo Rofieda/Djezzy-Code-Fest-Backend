@@ -12,6 +12,7 @@ from rest_framework import viewsets
 from .serializers import EventSerializer , CharitySerializer , ProductSerializer , StockSerializer , EventStockAllocationSerializer , TaskSerializer
 from accounts.models import Charity , Product , Stock , EventStockAllocation
 import math 
+from django.shortcuts import get_object_or_404
 
 
 class EventListCreateAPIView(APIView):
@@ -296,7 +297,7 @@ class EventStockAllocationListAPIView(generics.ListAPIView):
     
 
 class TaskCreateAPIView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
     def post(self, request):
         serializer = TaskSerializer(data=request.data)
         if serializer.is_valid():
@@ -311,6 +312,14 @@ class TaskCreateAPIView(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response({"error": "Event ID is required."}, status=status.HTTP_400_BAD_REQUEST)
     
+
+
+class TaskUpdateAPIView(generics.UpdateAPIView):
+    permission_classes = [AllowAny]
+    queryset = Task.objects.all()
+    serializer_class = TaskSerializer
+    lookup_field = 'id'
+
 
 from django.db import transaction
 

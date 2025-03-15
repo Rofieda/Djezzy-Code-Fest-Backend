@@ -1,5 +1,5 @@
 from django.urls import path 
-from .views import EventListCreateAPIView, EventDetailAPIView , CharitySearchAPIView , ProductAPIView ,StockAPIView  , AllocateStockToEventAPIView ,EventStockAllocationListAPIView , TaskCreateAPIView , AssignUserToTaskView , CheckStockThresholdAPIView
+from .views import EventListCreateAPIView, EventDetailAPIView , CharitySearchAPIView , ProductAPIView ,StockAPIView  , AllocateStockToEventAPIView ,EventStockAllocationListAPIView , TaskCreateAPIView , AssignUserToTaskView , CheckStockThresholdAPIView , TaskUpdateAPIView
 
 urlpatterns = [
     path('Creat_ListEvent/', EventListCreateAPIView.as_view(), name='event-list-create'), 
@@ -15,8 +15,11 @@ urlpatterns = [
 
     path('eventAllocations/<int:event_id>/', EventStockAllocationListAPIView.as_view(), name='event-allocations'),
     path('tasks/create/', TaskCreateAPIView.as_view(), name='task-create'),
-    path('tasks/<int:event_id>/', TaskCreateAPIView.as_view(), name='task-list-by-event'),
+    path('tasks/<int:event_id>/list/', TaskCreateAPIView.as_view(), name='task-list-by-event'),
+    path('tasks/<int:id>/update/', TaskUpdateAPIView.as_view(), name='task-update'), 
+       
     path('assign-task/', AssignUserToTaskView.as_view(), name='assign-task'),
     path('stock-alert/<int:charity_id>/', CheckStockThresholdAPIView.as_view(), name='check-stock-threshold'),
+    path('tasks/<int:task_id>/', TaskCreateAPIView.as_view(), name='task-update'),
 
 ]
