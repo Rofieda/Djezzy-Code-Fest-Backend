@@ -1,6 +1,7 @@
 
 from rest_framework import serializers
-from accounts.models import Event , Charity , Product , Stock , EventStockAllocation , Task
+from accounts.models import Event , Charity , Product , Stock , EventStockAllocation , Task , UserTask , Volunteer , User
+from accounts.serializers import UserSerializer
 import math
 
 
@@ -51,3 +52,24 @@ class EventSerializer(serializers.ModelSerializer):
     class Meta:
         model = Event
         fields = '__all__'
+
+
+
+
+class UserTaskSerializer(serializers.ModelSerializer):
+    user = UserSerializer()
+    task = TaskSerializer()
+    
+
+    class Meta:
+        model = UserTask
+        fields = ['user', 'task', 'assigned_date']
+
+
+
+    
+class VolunteerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Volunteer
+        fields = '__all__'
+

@@ -1,5 +1,8 @@
 from django.urls import path 
-from .views import EventListCreateAPIView, EventDetailAPIView , CharitySearchAPIView , ProductAPIView ,StockAPIView  , AllocateStockToEventAPIView ,EventStockAllocationListAPIView , TaskCreateAPIView , AssignUserToTaskView , CheckStockThresholdAPIView , TaskUpdateAPIView
+from .views import EventListCreateAPIView, EventDetailAPIView , CharitySearchAPIView , ProductAPIView ,StockAPIView  , AllocateStockToEventAPIView ,EventStockAllocationListAPIView , TaskCreateAPIView , AssignUserToTaskView , CheckStockThresholdAPIView , TaskUpdateAPIView , UserTaskListAPIView
+
+
+
 
 urlpatterns = [
     path('Creat_ListEvent/', EventListCreateAPIView.as_view(), name='event-list-create'), 
@@ -21,5 +24,7 @@ urlpatterns = [
     path('assign-task/', AssignUserToTaskView.as_view(), name='assign-task'),
     path('stock-alert/<int:charity_id>/', CheckStockThresholdAPIView.as_view(), name='check-stock-threshold'),
     path('tasks/<int:task_id>/', TaskCreateAPIView.as_view(), name='task-update'),
+
+    path('usertasks/<int:event_id>/', UserTaskListAPIView.as_view(), name='user-task-list'),
 
 ]

@@ -2,15 +2,15 @@ from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from accounts.models import Event , User , UserTask , Task
+from accounts.models import Event , User , UserTask , Task , Volunteer
 from django.http import Http404
 from rest_framework.permissions import AllowAny ,IsAuthenticated
 
 from rest_framework import generics
 # Create your views here.
 from rest_framework import viewsets
-from .serializers import EventSerializer , CharitySerializer , ProductSerializer , StockSerializer , EventStockAllocationSerializer , TaskSerializer
-from accounts.models import Charity , Product , Stock , EventStockAllocation
+from .serializers import EventSerializer , CharitySerializer , ProductSerializer , StockSerializer , EventStockAllocationSerializer , TaskSerializer , UserTaskSerializer , VolunteerSerializer
+from accounts.models import Charity , Product , Stock , EventStockAllocation 
 import math 
 from django.shortcuts import get_object_or_404
 
@@ -326,7 +326,7 @@ from django.db import transaction
 
 
 class AssignUserToTaskView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def post(self, request, *args, **kwargs):
         try:
@@ -389,7 +389,7 @@ class AssignUserToTaskView(APIView):
 
 
 class CheckStockThresholdAPIView(APIView):
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
 
     def get(self, request, charity_id, *args, **kwargs):
         stocks = Stock.objects.filter(charity_id=charity_id)
@@ -417,3 +417,38 @@ class CheckStockThresholdAPIView(APIView):
             # Everything is fine
             return Response({'message': 'All products are stocked in good quantities.'}, status=status.HTTP_200_OK)
         
+
+class UserTaskListAPIView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request, event_id):
+        user_tasks = UserTask.objects.filter(event_id=event_id)
+        response_data = []
+
+        for user_task in user_tasks:
+            # Serialize the UserTask normally
+            user_task_data = UserTaskSerializer(user_task).data
+            
+            # Get the nested user data
+            user_data = user_task_data.get('user', {})
+            volunteer_id = user_data.get('volunteer_id')
+
+            # If volunteer_id exists, get the volunteer object and remove volunteer_id from user data
+            if volunteer_id:
+                try:
+                    volunteer = Volunteer.objects.get(id=volunteer_id)
+                    volunteer_data = VolunteerSerializer(volunteer).data
+                    # Remove the volunteer_id field and add the volunteer object
+                    user_data.pop("volunteer_id", None)
+                    user_data["volunteer"] = volunteer_data
+                except Volunteer.DoesNotExist:
+                    user_data["volunteer"] = None
+            else:
+                # Otherwise, explicitly set volunteer to None
+                user_data["volunteer"] = None
+
+            # Update the user field in the user task data
+            user_task_data["user"] = user_data
+            response_data.append(user_task_data)
+
+        return Response(response_data, status=status.HTTP_200_OK)
