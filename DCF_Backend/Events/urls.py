@@ -15,6 +15,7 @@ urlpatterns = [
 
     path('eventAllocations/<int:event_id>/', EventStockAllocationListAPIView.as_view(), name='event-allocations'),
     path('tasks/create/', TaskCreateAPIView.as_view(), name='task-create'),
+    path('tasks/<int:event_id>/', TaskCreateAPIView.as_view(), name='task-list-by-event'),
     path('assign-task/', AssignUserToTaskView.as_view(), name='assign-task'),
     path('stock-alert/<int:charity_id>/', CheckStockThresholdAPIView.as_view(), name='check-stock-threshold'),
 

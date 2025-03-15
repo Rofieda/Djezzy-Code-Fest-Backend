@@ -156,31 +156,42 @@ class StockAPIView(APIView):
         Crée un nouvel enregistrement de stock ou met à jour la quantité existante.
         """
         charity_id = request.data.get('charity_id')
-        product_id = request.data.get('product_id')
+        product_data  = request.data.get('product')
         quantity = request.data.get('quantity', 0)
 
-        if not charity_id or not product_id:
+        if not charity_id or not product_data :
             return Response({"error": "charity et product sont obligatoires."}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
             charity = Charity.objects.get(id=charity_id)
-            product = Product.objects.get(id=product_id)
+            #product = Product.objects.get(id=product_id)
         except Charity.DoesNotExist:
             return Response({"error": "Charity introuvable."}, status=status.HTTP_404_NOT_FOUND)
-        except Product.DoesNotExist:
-            return Response({"error": "Produit introuvable."}, status=status.HTTP_404_NOT_FOUND)
-
-        # Vérifier si le stock existe déjà pour ce produit et cette association
+       
+        product_serializer = ProductSerializer(data=product_data)
+        if product_serializer.is_valid():
+            # Create or get the product
+            product, created = Product.objects.get_or_create(
+                name=product_serializer.validated_data['name'],
+                defaults={
+                    'description': product_serializer.validated_data.get('description', ''),
+                    'category': product_serializer.validated_data.get('category', ''),
+                    'seil': product_serializer.validated_data.get('seil', 33),
+                }
+            )
+        else:
+            return Response(product_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         stock, created = Stock.objects.get_or_create(charity=charity, product=product)
-
         if created:
             stock.quantity = quantity
         else:
-            stock.quantity += int(quantity)  # Ajoute à la quantité existante
-
+            stock.quantity += int(quantity)  # Add to the existing quantity
         stock.save()
-        serializer = StockSerializer(stock)
-        return Response(serializer.data, status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
+
+        # Serialize the stock entry
+        stock_serializer = StockSerializer(stock)
+        return Response(stock_serializer.data, status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
+      
 
     def patch(self, request):
         """
@@ -275,7 +286,7 @@ class AllocateStockToEventAPIView(APIView):
 
 
 class EventStockAllocationListAPIView(generics.ListAPIView):
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
     serializer_class = EventStockAllocationSerializer
 
     def get_queryset(self):
@@ -293,6 +304,14 @@ class TaskCreateAPIView(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
+    def get(self, request, event_id=None):
+        if event_id is not None:
+            tasks = Task.objects.filter(event_id=event_id)
+            serializer = TaskSerializer(tasks, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response({"error": "Event ID is required."}, status=status.HTTP_400_BAD_REQUEST)
+    
+
 from django.db import transaction
 
 
