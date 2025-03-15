@@ -5,12 +5,6 @@ import math
 
 
 
-class EventSerializer(serializers.ModelSerializer):
-    charity_name = serializers.CharField(source='charity.name', read_only=True)
-    class Meta:
-        model = Event
-        fields = '__all__'
-
 
 class CharitySerializer(serializers.ModelSerializer):
     class Meta:
@@ -47,3 +41,13 @@ class TaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = Task
         fields = '__all__'  # Includes all fields in the model
+
+
+    
+
+class EventSerializer(serializers.ModelSerializer):
+    charity_name = serializers.CharField(source='charity.name', read_only=True)
+    tasks = TaskSerializer(many=True, read_only=True) # reponse should contient the tasks in this event , so the volenteer choose one of them
+    class Meta:
+        model = Event
+        fields = '__all__'

@@ -89,7 +89,7 @@ class LoginView(TokenObtainPairView):
 
             # Prepare the response data with user details
             response_data = {
-               #'access': access_token,
+               'access': access_token,
                 'refresh': refresh_token,
                 'user': user_serializer.data ,
                 'role': role,
