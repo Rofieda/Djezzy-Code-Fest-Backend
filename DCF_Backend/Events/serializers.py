@@ -32,7 +32,7 @@ class StockSerializer(serializers.ModelSerializer):
 
 
 class EventStockAllocationSerializer(serializers.ModelSerializer):
-    product = ProductSerializer(read_only=True)
+    product = serializers.PrimaryKeyRelatedField(queryset=Product.objects.all())    
     class Meta:
         model = EventStockAllocation
         fields = ('id', 'event', 'product', 'allocated_quantity')

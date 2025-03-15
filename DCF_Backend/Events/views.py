@@ -252,7 +252,7 @@ class StockAPIView(APIView):
 
 
 class AllocateStockToEventAPIView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
   
     def post(self, request):
