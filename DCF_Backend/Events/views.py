@@ -297,7 +297,7 @@ class EventStockAllocationListAPIView(generics.ListAPIView):
     
 
 class TaskCreateAPIView(APIView):
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
     def post(self, request):
         serializer = TaskSerializer(data=request.data)
         if serializer.is_valid():
@@ -315,7 +315,7 @@ class TaskCreateAPIView(APIView):
 
 
 class TaskUpdateAPIView(generics.UpdateAPIView):
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
     queryset = Task.objects.all()
     serializer_class = TaskSerializer
     lookup_field = 'id'
