@@ -93,9 +93,8 @@ class LoginView(TokenObtainPairView):
                 'refresh': refresh_token,
                 'user': user_serializer.data ,
                 'role': role,
-                'volenteer_id': volunteer_id,
-                'charity_id': charity_id,
                 
+
                 'email': user.email,
             }
 

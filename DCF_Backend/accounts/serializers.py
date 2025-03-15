@@ -103,13 +103,24 @@ class LogoutUserSerializer(serializers.Serializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
+    volunteer_id  = serializers.SerializerMethodField()
+    charity_id  = serializers.SerializerMethodField()
     class Meta:
         model = User
-        fields = ['id','email', 'password', 'role']
+        fields = ['id','email', 'password', 'role','volunteer_id' , 'charity_id']
         extra_kwargs = {
-            'password': {'write_only': True},  #  password is write-only
+            'password': {'write_only': True}, 
         }
 
+    def get_volunteer_id(self, obj):
+       
+        volunteer = getattr(obj, 'volunteer_profile', None)
+        return volunteer.id if volunteer else None
+
+    def get_charity_id(self, obj):
+        charity = getattr(obj, 'charity_profile', None)
+        return charity.id if charity else None
+    
     def create(self, validated_data):
         user = User.objects.create_user(
             email=validated_data['email'],
