@@ -1,5 +1,5 @@
 from django.urls import path 
-from .views import EventListCreateAPIView, EventDetailAPIView , CharitySearchAPIView , ProductAPIView ,StockAPIView  , AllocateStockToEventAPIView ,EventStockAllocationListAPIView , TaskCreateAPIView , AssignUserToTaskView , CheckStockThresholdAPIView , TaskUpdateAPIView , UserTaskListAPIView
+from .views import EventListCreateAPIView, EventDetailAPIView , CharitySearchAPIView , ProductAPIView ,StockAPIView  , AllocateStockToEventAPIView ,EventStockAllocationListAPIView , TaskCreateAPIView , AssignUserToTaskView , CheckStockThresholdAPIView , TaskUpdateAPIView , UserTaskListAPIView , EventByCharityAPIView
 
 
 
@@ -26,5 +26,7 @@ urlpatterns = [
     path('tasks/<int:task_id>/', TaskCreateAPIView.as_view(), name='task-update'),
 
     path('usertasks/<int:event_id>/', UserTaskListAPIView.as_view(), name='user-task-list'),
+    path('eventsByCharity/<int:charity_id>/', EventByCharityAPIView.as_view(), name='events-by-charity'),
+
 
 ]

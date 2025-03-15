@@ -31,6 +31,15 @@ class EventListCreateAPIView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 
+class EventByCharityAPIView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request, charity_id, format=None):
+        events = Event.objects.filter(charity_id=charity_id)
+        serializer = EventSerializer(events, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
 
 class EventDetailAPIView(APIView):
     permission_classes = [IsAuthenticated]
